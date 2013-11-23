@@ -10,364 +10,6 @@ using Microsoft.Xna.Framework.Input;
 namespace SpaceIsFun
 {
     /// <summary>
-    /// Pew pew, its a weapon!
-    /// </summary>
-    class Weapon : Entity
-    {
-        #region fields
-        /// <summary>
-        /// True if the weapon is primed to fire, false otherwise (not fully charged, not powered, etc)
-        /// </summary>
-        private bool readyToFire;
-
-        /// <summary>
-        /// parameter for readyToFire
-        /// </summary>
-        public bool ReadyToFire
-        {
-            get
-            {
-                return readyToFire;
-            }
-
-            set
-            {
-                readyToFire = value;
-            }
-        }
-
-        /// <summary>
-        /// True if the weapon has a target, false if not
-        /// </summary>
-        private bool aimedAtTarget;
-
-        /// <summary>
-        /// parameter for aimedAtTarget
-        /// </summary>
-        public bool AimedAtTarget
-        {
-            get
-            {
-                return aimedAtTarget;
-            }
-
-            set
-            {
-                aimedAtTarget = value;
-            }
-        }
-
-        /// <summary>
-        /// the time, in miliseconds, it takes to charge the weapon
-        /// </summary>
-        private int timeToCharge;
-
-        /// <summary>
-        /// parameter for timeToCharge
-        /// </summary>
-        public int TimeToCharge
-        {
-            get
-            {
-                return timeToCharge;
-            }
-
-            set
-            {
-                timeToCharge = value;
-            }
-        }
-
-        private bool charged;
-        /// if the weapon is charged
-        /// end
-
-        ///paramater for charged
-        public bool Charged
-        {
-            get
-            {
-                return charged;
-            }
-
-            set
-            {
-                charged = value;
-            }
-        }
-
-        private bool is_charging;
-        /// if the weapon is charged
-        /// end
-
-        ///paramater for charged
-        public bool Is_charging
-        {
-            get
-            {
-                return is_charging;
-            }
-
-            set
-            {
-                is_charging = value;
-            }
-        }
-
-        //an int for weapon damage
-        private int damage;
-
-        //paramater for damage
-        public int Damage
-        {
-            get
-            {
-                return damage;
-            }
-
-            set
-            {
-                damage = value;
-            }
-        }
-
-        //an int for current charge, will be used with game time updated to track if a weapon is charged
-        private int charge;
-
-        //paramater for charge
-        public int Charge
-        {
-            get
-            {
-                return charge;
-            }
-
-            set
-            {
-                charge = value;
-            }
-        }
-
-        private int requiredPower;
-
-        public int RequiredPower
-        {
-            get
-            {
-                return requiredPower;
-            }
-
-            set
-            {
-                requiredPower = value;
-            }
-        }
-
-        private bool enoughPower;
-        //used to see if there is enough power to use the weapon
-
-        public bool EnoughPower
-        {
-            get
-            {
-                return enoughPower;
-            }
-
-            set
-            {
-                enoughPower = value;
-            }
-
-        }
-
-
-        private int currentTarget;
-        //these are used to see if which list index is the current target
-        public int CurrentTarget
-        {
-            get
-            {
-                return currentTarget;
-            }
-
-            set
-            {
-                currentTarget = value;
-            }
-        }
-
-        //a list of rooms that can be targeted, indexes are equivalent to the number of the room in constant.cs
-        //list[index] is changed to 1 if the room is targeted
-        private List<int> targeted_room = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-        private enum weap_states { disabled, charging, ready };
-        //unused for now
-
-        //state machine and state declarations
-        StateMachine weaponStateMachine;
-        State ready, disabled, charging;
-
-        /// <summary>
-        /// This an enumeration of strings that represent the different weapon states
-        /// </summary>
-
-        #endregion
-
-        #region constructors / destructors
-
-        //a generic constructor
-        public Weapon() { }
-        //declaration of the weapon state machine
-
-        public Weapon(Texture2D skin, int x, int y, int dmg, int time_to_charge, int power)
-        {
-
-            weaponStateMachine = new StateMachine();
-
-            ///block for declaration of new states for the weapon
-            disabled = new State { Name = "diabled" };
-            charging = new State { Name = "charging" };
-            ready = new State { Name = "ready" };
-
-            //next blocks are transitions available for each state
-            disabled.Transitions.Add(charging.Name, charging);
-            disabled.Transitions.Add(ready.Name, ready);
-
-            charging.Transitions.Add(disabled.Name, disabled);
-            charging.Transitions.Add(ready.Name, ready);
-
-            ready.Transitions.Add(disabled.Name, disabled);
-            ready.Transitions.Add(charging.Name, charging);
-
-
-            set_disabled();
-            set_charging();
-            set_ready();
-
-            //int x will be x coordinate
-            //int y will be y coordinate
-            damage = dmg;
-            timeToCharge = time_to_charge;
-            is_charging = false;
-            weaponStateMachine.Start(disabled);
-            int charge = 0;
-            if (power >= requiredPower)
-                enoughPower = true;
-
-
-        }
-
-
-        #endregion
-
-        #region methods
-
-        void set_disabled()
-        {
-
-            disabled.enter += () =>
-            {
-            };
-            disabled.update += (GameTime gameTime) =>
-            {
-                if (readyToFire == false && is_charging == true)
-                {
-                    weaponStateMachine.Transition(charging.Name);
-                }
-            };
-
-            disabled.leave += () =>
-            { };
-
-        }
-
-        void set_charging()
-        {
-            charging.enter += () => { };
-            start_charging();
-            charging.update += (GameTime gameTime) =>
-            {
-                //not sure if this will actually work.
-                charge += (int)gameTime.ElapsedGameTime.Milliseconds;
-                if (charge == timeToCharge)
-                    readyToFire = true;
-                if (readyToFire == true)
-                {
-                    weaponStateMachine.Transition(ready.Name);
-                }
-
-                else if (readyToFire == false && is_charging == false)
-                    weaponStateMachine.Transition(disabled.Name);
-            };
-
-            charging.leave += () => { };
-        }
-
-        void set_ready()
-        {
-            ready.enter += () => { };
-
-
-            ready.update += (GameTime gameTime) =>
-            {
-
-                if (readyToFire == false && is_charging == true)
-                {
-                    weaponStateMachine.Transition(charging.Name);
-                }
-
-                else if (readyToFire == false && is_charging == false)
-                {
-                    weaponStateMachine.Transition(disabled.Name);
-                }
-            };
-
-        }
-
-        void start_charging()
-        {
-            if (enoughPower == true)
-                is_charging = true;
-
-        }
-
-        void set_target(int targetIndex)
-        {
-            if (targetIndex > targeted_room.Count)
-            {
-                Console.WriteLine("You passed an invalid index here");
-                return; //throw some exception here
-            }
-
-            aimedAtTarget = true;
-
-            if (targetIndex != currentTarget)
-                targeted_room[currentTarget] = 0;
-
-            targeted_room[targetIndex] = 1;
-
-        }
-
-        void launch_weapon(int target)
-        {
-            if (weaponStateMachine.CurrentState == ready)
-            {
-
-                //write some code here to actually pass damage to another ship
-
-            }
-        }
-
-
-        #endregion
-
-
-    }
-
-
-
-
-    /// <summary>
     /// Its a ship!
     /// </summary>
     class Ship : Entity
@@ -489,6 +131,8 @@ namespace SpaceIsFun
             }
         }
 
+        
+
         /// <summary>
         /// the ship's Drawable object
         /// </summary>
@@ -511,14 +155,14 @@ namespace SpaceIsFun
         }
 
         /// <summary>
-        /// the 2D Grid array holding the grid objects attributed to the ship
+        /// the 2D int array holding the grid UIDs attributed to the ship
         /// </summary>
-        private Grid[,] shipGrid;
+        private int[,] shipGrid;
 
         /// <summary>
         /// parameter for shipGrid
         /// </summary>
-        public Grid[,] ShipGrid
+        public int[,] ShipGrid
         {
             get
             {
@@ -532,14 +176,14 @@ namespace SpaceIsFun
         }
 
         /// <summary>
-        /// the list of rooms for a ship
+        /// the list of rooms on a ship; this is always gonna be size 11, and just tells whether or not the ship has a room of that type
         /// </summary>
-        private List<Room> roomList;
+        private bool[] roomList;
 
         /// <summary>
         /// parameter for roomList
         /// </summary>
-        public List<Room> RoomList
+        public bool[] RoomList
         {
             get
             {
@@ -553,14 +197,14 @@ namespace SpaceIsFun
         }
 
         /// <summary>
-        /// relation between grids and their respective rooms
+        /// relation between grids and their respective rooms: key gridUID, value roomUID
         /// </summary>
-        private Dictionary<Grid, Room> roomGridDict;
+        private Dictionary<int, int> roomGridDict;
 
         /// <summary>
         /// parameter for roomGridList
         /// </summary>
-        public Dictionary<Grid, Room> RoomGridDict
+        public Dictionary<int, int> RoomGridDict
         {
             get
             {
@@ -572,6 +216,175 @@ namespace SpaceIsFun
                 roomGridDict = value;
             }
         }
+
+
+        /// <summary>
+        /// how wide the grid list is
+        /// </summary>
+        private int gridWidth;
+
+        /// <summary>
+        /// parameter for gridWidth
+        /// </summary>
+        public int GridWidth
+        {
+            get
+            {
+                return gridWidth;
+            }
+
+            set
+            {
+                gridWidth = value;
+            }
+        }
+
+        private Weapon default_weap;
+
+        public Weapon Default_weap
+        {
+            get
+            {
+                return default_weap;
+            }
+
+            set
+            {
+                default_weap = value;
+            }
+        }
+
+        /// <summary>
+        /// how high the grid list is
+        /// </summary>
+        private int gridHeight;
+
+        /// <summary>
+        /// parameter for gridWidth
+        /// </summary>
+        public int GridHeight
+        {
+            get
+            {
+                return gridHeight;
+            }
+
+            set
+            {
+                gridHeight = value;
+            }
+        }
+
+        /// <summary>
+        /// holds the room UIDs assigned to this ship
+        /// </summary>
+        private List<int> roomUIDList;
+
+        public List<int> RoomUIDList
+        {
+            get
+            {
+                return roomUIDList;
+            }
+
+            set
+            {
+                roomUIDList = value;
+            }
+        }
+
+        /// <summary>
+        ///  holds the grid UIDs assigned to this ship
+        /// </summary>
+        private List<int> gridUIDList;
+
+        public List<int> GridUIDList
+        {
+            get
+            {
+                return gridUIDList;
+            }
+
+            set
+            {
+                gridUIDList = value;
+            }
+        }
+        
+        /// <summary>
+        /// holds the UIDs of weapons assigned to this ship
+        /// </summary>
+        private List<int> weaponUIDList;
+
+        public List<int> WeaponUIDList
+        {
+            get
+            {
+                return weaponUIDList;
+            }
+
+            set
+            {
+                weaponUIDList = value;
+            }
+        }
+
+        /// <summary>
+        /// holds the UID for a weapon assigned to a specific slot; -1 if nothing is assigned to that slot
+        /// </summary>
+        private int[] weaponSlots;
+
+        public int[] WeaponSlots
+        {
+            get
+            {
+                return weaponSlots;
+            }
+
+            set
+            {
+                weaponSlots = value;
+            }
+        }
+
+        /// <summary>
+        /// an array of screenspace x,y points where each weapon slots is mounted on the ship
+        /// weaponMountPoints[0] corresponds to weaponSlots[0], [1] to [1], etc
+        /// </summary>
+        private Point[] weaponMountPoints;
+
+        public Point[] WeaponMountPoints
+        {
+            get
+            {
+                return weaponMountPoints;
+            }
+
+            set
+            {
+                value = weaponMountPoints;
+            }
+        }
+
+
+        /// <summary>
+        /// faction owner of this ship; for now 0=player, 1=enemy
+        /// </summary>
+        private int owner;
+
+        public int Owner
+        {
+            get
+            {
+                return owner;
+            }
+
+            set
+            {
+                owner = value;
+            }
+        }
+
         #endregion
 
         #region constructors / destructors
@@ -586,12 +399,22 @@ namespace SpaceIsFun
         /// <param name="gridTexture">texture used to draw the ship's grid</param>
         /// <param name="highlightTexture">texture used to draw the ship's grid when a grid is selected</param>
         /// <param name="position">initial position of the ship's sprite</param>
-        public Ship(Texture2D shipTexture, Texture2D gridTexture, Texture2D highlightTexture, Vector2 position, List<Room> rList)
+        public Ship(Texture2D shipTexture, 
+                    Texture2D gridTexture, 
+                    Texture2D highlightTexture, 
+                    Vector2 position,
+                    List<int> roomUIDs,
+                    List<int> gridUIDs,
+                    List<int> weaponUIDs,
+                    bool[] roomTypes,
+                    int[,] shipGrid,
+                    int owner)
+
+
             : base()
         {
-            roomList = new List<Room>();
-            roomGridDict = new Dictionary<Grid, Room>();
-            roomList = rList;
+            roomList = new bool[11];
+            roomGridDict = new Dictionary<int,int>();
             System.Diagnostics.Debug.WriteLine("initting ship");
             // set some default values 
             maxHP = currentHP = 10;
@@ -601,39 +424,39 @@ namespace SpaceIsFun
             // create the ship's drawable
             sprite = new Drawable(shipTexture, position);
             // create the ship's grid; each grid is 32-wide, so we get the amount of grids needed by dividing the ship's sprite up into 32x32 chunks
-            int gridWidth = shipTexture.Bounds.Width / 32;
-            int gridHeight = shipTexture.Bounds.Height / 32;
-            shipGrid = new Grid[gridWidth, gridHeight];
+            gridWidth = shipTexture.Bounds.Width / 32;
+            gridHeight = shipTexture.Bounds.Height / 32;
+            //this.shipGrid = new int[gridWidth, gridHeight];
+            this.shipGrid = shipGrid;
 
-            // iterate over the ship sprite's width
-            for (int i = 0; i < shipTexture.Bounds.Width/32; i++)
-            {
-                // in each column, iterate over the ship sprite's height
-                for (int j = 0; j < shipTexture.Bounds.Height/32; j++)
-                {
-                    // create a new grid object for i,j
-                    shipGrid[i, j] = new Grid(gridTexture, highlightTexture, new Vector2(i * 32 + position.X, j * 32 + position.Y), new Vector2(i, j));
-                    
-                }
-            }
 
-            //ShipGrid[0, 0].IsWalkable = false;
-            //ShipGrid[1, 1].IsWalkable = false;
-            //ShipGrid[2, 2].IsWalkable = false;
-            //ShipGrid[3, 3].IsWalkable = false;
-            //ShipGrid[4, 4].IsWalkable = false;
+
             
 
-            // we need to move the rooms to align ontop of the ship; probably find a better way to do this in the future
+            this.owner = owner;
 
+            roomUIDList = roomUIDs;
+            gridUIDList = gridUIDs;
+            weaponUIDList = weaponUIDs;
+
+            weaponSlots = new int[4];
+
+            weaponSlots[0] = weaponUIDList[0];
+            weaponSlots[1] = -1;
+            weaponSlots[2] = -1;
+            weaponSlots[3] = -1;
+
+            //Default_weap = new Weapon(gridTexture, 0, 0, 2, 10, 3);
+            // we need to move the rooms to align ontop of the ship; probably find a better way to do this in the future
+            /*
             foreach (Room room in roomList)
             {
                 room.Sprite.MoveBy(new Vector2(50, 50));
             }
+            */
 
-
-            setRoomGridDictionary();
-            setUnwalkableGrids();
+            //setRoomGridDictionary();
+            //setUnwalkableGrids();
 
         }
 
@@ -647,6 +470,10 @@ namespace SpaceIsFun
         /// <param name="gameTime"></param>
         override public void Update(GameTime gameTime)
         {
+            if (currentHP == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("dead ship");
+            }
             //update the shield
             /*if (roomList[0].getStatus() != "inoperable" || roomList[0].getStatus() != "disabled")
             {
@@ -670,167 +497,40 @@ namespace SpaceIsFun
             sprite.Draw(spriteBatch);
 
             // for each grid on the ship, draw its sprite
-            foreach (Grid shipgrid in shipGrid)
-            {
-                shipgrid.Draw(spriteBatch);
-            }
+            
 
             // for each room on the ship, draw
-            foreach (Room shipRoom in roomList)
-            {
-                shipRoom.Draw(spriteBatch);
-            }
+            
 
             base.Draw(spriteBatch);
         }
 
         /// <summary>
-        /// check whether or not the cursor is current hovering over this ship
+        /// do damage to the ship
         /// </summary>
-        /// <param name="currentMouseState">current state of the mouse</param>
-        /// <returns></returns>
-        public bool checkShipHover(MouseState currentMouseState)
+        /// <param name="amount"></param>
+        /// <returns>1 if this shot has killed the ship, 0 if this shot has not killed the ship</returns>
+        public int TakeDamage(int amount)
         {
-
-            // if the cursor is between the sprite's topleft and bottomright corners
-            if (((currentMouseState.X > sprite.Position2D.X)
-                    && (currentMouseState.X < sprite.Position2D.X + sprite.Width)
-                  && ((currentMouseState.Y > sprite.Position2D.Y)
-                    && (currentMouseState.Y < sprite.Position2D.Y + sprite.Height))))
-             {
-                // our mouse cursor should be within the bounds of the ship
-                //System.Diagnostics.Debug.WriteLine("Cursor on the ship!");
-                return true;
-             }
+            if (currentHP < amount)
+            {
+                currentHP = 0;
+                return 1;
+            }
 
             else
             {
-                return false;
+                currentHP = currentHP - amount;
+                return 0;
             }
-
         }
 
-        /// <summary>
-        /// check which grid the cursor is currently hovering over; note: this only should get called if checkShipHover returns TRUE
-        /// </summary>
-        /// <param name="currentMouseState">current state of the mouse</param>
-        /// <returns></returns>
-        public Vector2 getGridHover(MouseState currentMouseState)
-        {
-            // we know the cursor is within bounds, this will only get called if checkShipHover returns true
 
-            Vector2 ret = new Vector2();
-
-            // x position relative to the ship
-            float relativeXPos = currentMouseState.X - sprite.Position2D.X;
-            // y position relative to the ship
-            float relativeYPos = currentMouseState.Y - sprite.Position2D.Y;
-
-            // grid x position relative to the ship
-            ret.X = (int)relativeXPos / 32;
-
-            // grid y position relative to the ship
-            ret.Y = (int)relativeYPos / 32;
-
-            return ret;
         
-        }
 
-        /// <summary>
-        /// check whether or not the cursor is hovering over a room
-        /// </summary>
-        /// <param name="currentMouseState"></param>
-        /// <returns></returns>
-        public bool checkRoomHover(MouseState currentMouseState)
-        {
-            // find the grid we're hovering over
+        
 
-            Vector2 gridHover = getGridHover(currentMouseState);
-
-            // convert this point to a grid object
-            Grid gridToCheck = shipGrid[(int)gridHover.X, (int)gridHover.Y];
-
-            // get the room out of the grid,room dict
-            try
-            {
-                Room checkRoom = roomGridDict[gridToCheck];
-            }
-
-            catch (KeyNotFoundException e)
-            {
-                System.Diagnostics.Debug.WriteLine("grid not part of a room");
-                //ret.RoomPosition = new Vector2(-1, -1);
-                //return ret;
-                return false;
-            }
-
-
-            return true;
-        }
-
-        /// <summary>
-        /// check which room the cursor is currently hovering over, this only should get called if checkRoomHover returns TRUE
-        /// </summary>
-        /// <param name="gridToCheck"></param>
-        /// <returns></returns>
-        public Room getRoomHover(MouseState currentMouseState)
-        {
-            // find the grid we're hovering over
-
-            Vector2 gridHover = getGridHover(currentMouseState);
-
-            // convert this point to a grid object
-            Grid gridToCheck = shipGrid[(int)gridHover.X, (int)gridHover.Y];
-
-            // get the room out of the grid,room dict
-            return roomGridDict[gridToCheck];
-        }
-
-        /// <summary>
-        ///  initializes the relationship between grids and their rooms; this is called in the ship constructor ONCE, and only after all other initialization logic has occured
-        /// </summary>
-        private void setRoomGridDictionary()
-        {
-            foreach (Room rL in roomList)
-            {
-                switch (rL.RoomShape)
-                {
-                    case Globals.roomShape.TwoXTwo:
-                        roomGridDict[ShipGrid[(int)rL.RoomPosition.X, (int)rL.RoomPosition.Y]] = rL;
-                        roomGridDict[ShipGrid[(int)rL.RoomPosition.X + 1, (int)rL.RoomPosition.Y]] = rL;
-                        roomGridDict[ShipGrid[(int)rL.RoomPosition.X, (int)rL.RoomPosition.Y + 1]] = rL;
-                        roomGridDict[ShipGrid[(int)rL.RoomPosition.X + 1, (int)rL.RoomPosition.Y + 1]] = rL;
-                        break;
-
-                    // TODO: fill in other cases
-                }
-            }
-
-            // TODO: possibly un-associate any un-wanted grids with rooms (weirdly-shaped rooms, for example)
-
-        }
-
-        /// <summary>
-        /// sets every grid that doesnt belong to a room as unwalkable
-        /// </summary>
-        private void setUnwalkableGrids()
-        {
-            for (int i = 0; i < shipGrid.GetLength(0); i++)
-            {
-                for (int j = 0; j < shipGrid.GetLength(1); j++)
-                {
-                    // is this grid in the dictionary of grids  that have rooms?
-                    // if not, make it unwalkable
-
-                    if(!roomGridDict.Keys.Contains(shipGrid[i,j]))
-                    {
-                        //System.Diagnostics.Debug.WriteLine(shipGrid[i, j].GridPosition.ToString());
-                        shipGrid[i, j].IsWalkable = false;
-                        
-                    }
-                }
-            }
-        }
+        
 
 
         #endregion 
