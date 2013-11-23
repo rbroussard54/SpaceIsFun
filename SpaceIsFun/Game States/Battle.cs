@@ -76,7 +76,23 @@ namespace SpaceIsFun
             hasSelectedCrew.Transitions.Add(idleCursor.Name, idleCursor);
             hasSelectedCrew.Transitions.Add(hasSelectedCrew.Name, hasSelectedCrew);
 
-            
+
+            // make health bar elements
+            Panel health1 = new Panel(20, screenHeight - 128, 40, 128 - 8);
+            Panel health2 = new Panel(84 + 4, screenHeight - 128, 40, 128 - 8);
+            Panel health3 = new Panel(148 + 4, screenHeight - 128, 40, 128 - 8);
+            Panel health4 = new Panel(202 + 4, screenHeight - 128, 40, 128 - 8);
+            Panel health5 = new Panel(276 + 4, screenHeight - 128, 40, 128 - 8);
+            Panel health6 = new Panel(340 + 4, screenHeight - 128, 40, 128 - 8);
+            Panel health7 = new Panel(404 + 4, screenHeight - 128, 40, 128 - 8);
+
+            Image healthBar1;
+
+            // this list will hold the individual bars within one energy bar
+            List<Widget> healthBarTest = new List<Widget>();
+
+            int shipStartHealth = playerShip.Health;
+
 
             cursorState.Start(idleCursor);
 
@@ -86,7 +102,24 @@ namespace SpaceIsFun
             battle.enter += () =>
             {
                 // add gui elements here
-                
+
+                // adds all the energy bars to the gui
+                gui.AddWidget(health1);
+                gui.AddWidget(health2);
+                gui.AddWidget(health3);
+                gui.AddWidget(health4);
+                gui.AddWidget(health5);
+                gui.AddWidget(health6);
+                gui.AddWidget(health7);
+                // AND I'M DONE WOOT WOOT
+                // replenish health(?) maybe? I don't even... 
+                for (int i = 0; i < playerShip.Health; i++)
+                {
+                    health1.AddWidget(healthBar1 = new Image(20, (128 - 16 - 8 - 8) - i * 16, healthBarSprite));
+                    healthBarTest.Add(healthBar1);
+                }
+              
+
                 // player ship HP, enemy ship HP
 
 
@@ -406,6 +439,15 @@ namespace SpaceIsFun
             {
                 // tear down gui elements
 
+                // remove the health widgets from the gui
+                gui.RemoveWidget(health1);
+                gui.RemoveWidget(health2);
+                gui.RemoveWidget(health3);
+                gui.RemoveWidget(health4);
+                gui.RemoveWidget(health5);
+                gui.RemoveWidget(health6);
+                gui.RemoveWidget(health7);
+
                 // remove the energy widgets from the gui
                 gui.RemoveWidget(energy1);
                 gui.RemoveWidget(energy2);
@@ -672,9 +714,13 @@ namespace SpaceIsFun
             };
             #endregion
 
-
-            
            
+
+           
+
+         
+
+
         }
 
     }

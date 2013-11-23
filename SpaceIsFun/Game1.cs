@@ -98,6 +98,7 @@ namespace SpaceIsFun
         Texture2D gridSprite;
         Texture2D gridHighlightSprite;
         Texture2D energyBarSprite;
+        Texture2D healthBarSprite;
         Texture2D roomSprite;
         Texture2D roomHighlightSprite;
         Texture2D pixel;

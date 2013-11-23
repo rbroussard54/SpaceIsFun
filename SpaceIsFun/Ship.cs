@@ -131,7 +131,19 @@ namespace SpaceIsFun
             }
         }
 
-        
+        private int health;
+
+        public int Health
+        {
+            get
+            {
+                return health;
+            }
+            set
+            {
+                health = value;
+            }
+        }
 
         /// <summary>
         /// the ship's Drawable object
